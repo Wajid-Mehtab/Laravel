@@ -348,6 +348,9 @@ export default function Frontoffice() {
   const [maritalStatusOptions, setMaritalStatusOptions] = useState([]);
   const [categories, setCategories] = useState([]);
 
+  const [searchRows, setSearchRows] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+
   // Get the Data in history grid
   const historyQid =
       detailForm?.QueryID ||
@@ -361,24 +364,44 @@ export default function Frontoffice() {
     ModifiedBy: userid,
     // ... other fields
   };
+  function toSearchRow(c) {
+    return {
+      id: c.ID ?? c.id ?? '',
+      name: c.Name ?? '',
+      fatherName: c.FatherName ?? '',
+      gender: c.Gender ?? '',
+      age: c.Age ?? '',
+      additionalInfo3: c.Province ?? c.AdditionalInfo3 ?? '',
+      additionalInfo2: c.District ?? c.AdditionalInfo2 ?? '',
+      city: c.City ?? '',
+      phoneNo: c.PhoneNo ?? c.ContactNumber ?? '',
+      address: c.Address ?? '',
+      additionalInfo5: c.HeardFrom ?? c.AdditionalInfo5 ?? '',
+      cnic: c.CNIC ?? '',
+      cellNo: c.CellNO ?? c.CellNo ?? '',
+      additionalInfo6: c.Religion ?? c.AdditionalInfo6 ?? '',
+      additionalInfo1: c.Salary ?? c.AdditionalInfo1 ?? '',
+      additionalInfo4: c.Country ?? c.AdditionalInfo4 ?? '',
+      additionalInfo10: c.CallbackTwo ?? c.AdditionalInfo10 ?? '',
+      additionalInfo9: c.Remarks ?? c.AdditionalInfo9 ?? '',
+      additionalInfo8: c.MaritalStatus ?? c.AdditionalInfo8 ?? '',
+    };
+  }
+
   const fetchContactDetails = async (phoneNo, cid = -1) => {
     try {
+      setSearchLoading(true); // NEW
+
       const res = await fetch("http://localhost:8000/api/find-contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phoneNo,
-          manual: true,
-          CID: cid,
-        }),
+        body: JSON.stringify({ phoneNo, manual: true, CID: cid }),
       });
 
       const text = await res.text();
-     // console.log("fetchContactDetails", text);
-
-      // If not JSON, stop here
       if (!res.ok) {
         console.error("Server error:", res.status);
+        setSearchRows([]);                // NEW
         return;
       }
 
@@ -387,13 +410,13 @@ export default function Frontoffice() {
         result = JSON.parse(text);
       } catch (jsonErr) {
         console.error("Invalid JSON from backend:", text);
+        setSearchRows([]);                // NEW
         return;
       }
 
-      if (result.status === "known" && result.contacts.length > 0) {
+      if (result.status === "known" && Array.isArray(result.contacts) && result.contacts.length > 0) {
+        // 1) keep your existing setForm(...)
         const contact = result.contacts[0];
-        console.log("fetchContactDetails", contact.ID);
-
         setForm((prev) => ({
           ...prev,
           id: contact.ID || "",
@@ -417,13 +440,23 @@ export default function Frontoffice() {
           AdditionalInfo9: contact.Remarks || "",
           AdditionalInfo10: contact.CallbackTwo || "",
           AdditionalInfo1: contact.Salary || "",
-          CreatedBy: userid, // ✅ keep fullName even when updating
+          CreatedBy: userid,
         }));
+
+        // 2) NEW: fill the Search grid with ALL returned contacts
+        const rows = result.contacts.map(toSearchRow);
+        setSearchRows(rows);
+      } else {
+        setSearchRows([]);                // NEW
       }
     } catch (err) {
       console.error("Contact detail error:", err);
+      setSearchRows([]);                  // NEW
+    } finally {
+      setSearchLoading(false);            // NEW
     }
   };
+
 
   useEffect(() => {
     setForm(prev => ({ ...prev, CreatedBy: userid }));
@@ -672,7 +705,7 @@ export default function Frontoffice() {
 
   const renderContent = () => {
     switch (selectedTab) {
-      case "search": return <SearchTab />;
+      case "search": return <SearchTab rows={searchRows} loading={searchLoading} />;
       case "profile": return <CallerProfileTab />;
       case "dashboard": return <CallerDashbordTab />;
       case "list": return <ListTab onRowClick={handleRowClick} data={listData} setData={setListData} />;

@@ -1,3 +1,4 @@
+// src/components/FrontOfficeComp/Search.js
 import React from 'react';
 import DataTable from 'react-data-table-component';
 
@@ -23,72 +24,31 @@ const columns = [
   { name: 'Marital Status', selector: row => row.additionalInfo8 },
 ];
 
-const data = [
-  {
-    id: 1,
-    name: "Ali Raza",
-    fatherName: "Ahmed Raza",
-    gender: "Male",
-    age: 28,
-    additionalInfo3: "Punjab",
-    additionalInfo2: "Lahore",
-    city: "Lahore",
-    phoneNo: "042-1234567",
-    address: "Model Town, Lahore",
-    additionalInfo5: "Friend",
-    cnic: "35201-1234567-1",
-    cellNo: "03001234567",
-    additionalInfo6: "Islam",
-    additionalInfo1: "50000",
-    additionalInfo4: "Pakistan",
-    additionalInfo10: "Next Week",
-    additionalInfo9: "Good candidate",
-    additionalInfo8: "Single"
-  },
-  {
-    id: 2,
-    name: "Sara Khan",
-    fatherName: "Imran Khan",
-    gender: "Female",
-    age: 25,
-    additionalInfo3: "Sindh",
-    additionalInfo2: "Karachi",
-    city: "Karachi",
-    phoneNo: "021-7654321",
-    address: "Gulshan, Karachi",
-    additionalInfo5: "Facebook",
-    cnic: "42101-7654321-0",
-    cellNo: "03111234567",
-    additionalInfo6: "Islam",
-    additionalInfo1: "60000",
-    additionalInfo4: "Pakistan",
-    additionalInfo10: "Tomorrow",
-    additionalInfo9: "Follow up",
-    additionalInfo8: "Married"
-  }
-];
-// Custom styles for DataTable
 const customStyles = {
   headRow: {
     style: {
-      backgroundColor: '#343a40', // Bootstrap bg-dark
-      color: '#fff',              // White text
+      backgroundColor: '#343a40',
+      color: '#fff',
       fontWeight: 'bold',
     },
   },
 };
-export default function SearchTab() {
+
+export default function SearchTab({ rows = [], loading = false }) {
   return (
-    <div className="card p-3 mt-3">
-      <h5 className="mb-3">Search Results</h5>
-      <DataTable
-        columns={columns}
-        data={data}
-        pagination
-        responsive
-        highlightOnHover
-        dense
-      />
-    </div>
+      <div className="card p-3 mt-3">
+        <h5 className="mb-3">Search Results</h5>
+        <DataTable
+            columns={columns}
+            data={rows}
+            pagination
+            responsive
+            highlightOnHover
+            dense
+            customStyles={customStyles}
+            progressPending={loading}
+            noDataComponent={<div className="text-muted">No results.</div>}
+        />
+      </div>
   );
 }
